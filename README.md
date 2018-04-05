@@ -12,3 +12,6 @@ Access http://localhost:3000/shuffle_images REST API to create symbolic links fo
 
 ## List Images
 Access http://localhost:3000/ URL to view the images that will be displayed using the symbolic link files created in `active_images` directory.
+
+## Tests
+Run tests using `npm test` command
