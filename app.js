@@ -1,39 +1,46 @@
 const express = require('express');
 const path = require('path');
 
-const {Images} = require('./images');
-
-const port = process.env.PORT || 3000;
 const app = express();
-
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, '/public')));
 
+const {Images} = require('./images');
+const {env, host, port, query_string, images_max_limit} = require('./config');
 let images = new Images();
-images.scrapeImages('nature', 100);
 
+// skip scraping in test env
+if(env !== 'test') {
+	images.scrapeImages(query_string, images_max_limit);
+}
+
+// dynamically generate web page with the images from active_images directory
 app.get('/', function(req, res) {
 	images.getActiveImages()
 	.then((images) => {
-		res.render('index', {images});
+		res.status(200).render('index', {images});
 	})
 	.catch((err) => {
-		res.send('Something went wrong!');
+		res.status(500).send('Something went wrong!');
 		// res.send(err);
 	});
 });
 
+// REST API to shuffle images by creating symbolic links to the images from origin_images directory
 app.get('/shuffle_images', function(req, res) {
 	images.shuffle()
 	.then(() => {
-		res.send('Images have been shuffled successfully.');
+		res.status(200).send('Images have been shuffled successfully.');
 	})
 	.catch((err) => {
-		res.send('Something went wrong!');
+		console.log(err);
+		res.status(500).send('Something went wrong!');
 		// res.send(err);
 	});
 });
 
-app.listen(port, function() {
-	console.log(`Server started on port ${port}`);
+app.listen(port, host, function() {
+	console.log(`Server started on http://${host}:${port}\n\n`);
 });
+
+module.exports = {app, port, host};
